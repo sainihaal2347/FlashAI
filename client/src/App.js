@@ -1,14 +1,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import ReactCardFlip from 'react-card-flip';
-import { Trash2, Plus, LogOut, Zap, Brain, RotateCw, ArrowLeft, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
+import { Trash2, Plus, LogOut, Zap, Brain, RotateCw, ArrowLeft, ChevronLeft, ChevronRight, Layers, User, Settings, HelpCircle, ChevronDown, X, Library, LayoutGrid, Sparkles, Mail, BookOpen } from 'lucide-react';
 import './App.css';
+
+// --- CUSTOM COMPONENTS ---
+
+const Logo = () => (
+  <div className="app-logo">
+    <div className="logo-icon">
+      <Zap size={24} fill="currentColor" />
+    </div>
+    <span className="logo-text">FlashAI</span>
+  </div>
+);
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  // NAVIGATION STATE: 'library', 'create', 'study'
+  const [view, setView] = useState('library'); 
   
   const [text, setText] = useState('');
   const [numCards, setNumCards] = useState(10); 
@@ -16,8 +31,24 @@ function App() {
   const [selectedDeck, setSelectedDeck] = useState(null);
   const [flipped, setFlipped] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  
+  // NEW: Dark Mode State
+  const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
+  const [activeModal, setActiveModal] = useState(null);
   
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState('next'); // State for animation direction
+
+  // Apply Dark Mode Class
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+    localStorage.setItem('darkMode', darkMode);
+  }, [darkMode]);
 
   const fetchDecks = useCallback(async () => {
     try {
@@ -38,7 +69,10 @@ function App() {
       const res = await axios.post(`http://localhost:5000${endpoint}`, { email, password });
       if (isLogin) {
         localStorage.setItem('token', res.data.token);
+        localStorage.setItem('user', JSON.stringify(res.data.user)); 
         setToken(res.data.token);
+        setUser(res.data.user);
+        setView('library');
       } else {
         alert("Success! Please log in.");
         setIsLogin(true);
@@ -50,26 +84,29 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setToken(null);
+    setUser(null);
     setDecks([]);
     setSelectedDeck(null);
+    setShowDropdown(false);
+    setActiveModal(null);
+    setView('library');
   };
 
   const generateDeck = async () => {
     if (!text) return;
     setLoading(true);
     try {
-      // DEBUG: Log what we are sending
-      console.log("Sending to server:", { text: text.substring(0, 20) + "...", count: numCards });
-      
       await axios.post('http://localhost:5000/api/generate', { 
         text, 
-        count: numCards // IMPORTANT: This must match the backend variable
+        count: numCards 
       }, {
         headers: { Authorization: token }
       });
       setText('');
       await fetchDecks();
+      setView('library'); // Redirect to library after generation
     } catch (err) { 
       console.error(err);
       alert("Failed to generate"); 
@@ -94,12 +131,18 @@ function App() {
 
   const handleNext = () => {
     if (currentCardIndex < selectedDeck.cards.length - 1) {
+      setSlideDirection('next');
+      // Reset the flip state for the NEW card index before showing it
+      setFlipped(prev => ({ ...prev, [currentCardIndex + 1]: false }));
       setCurrentCardIndex(prev => prev + 1);
     }
   };
 
   const handlePrev = () => {
     if (currentCardIndex > 0) {
+      setSlideDirection('prev');
+      // Reset the flip state for the NEW card index before showing it
+      setFlipped(prev => ({ ...prev, [currentCardIndex - 1]: false }));
       setCurrentCardIndex(prev => prev - 1);
     }
   };
@@ -107,115 +150,284 @@ function App() {
   const openDeck = (deck) => {
     setSelectedDeck(deck);
     setCurrentCardIndex(0);
-    setFlipped({}); 
+    setFlipped({});
+    setSlideDirection('next');
+    setView('study');
   };
+
+  const openModal = (type) => {
+    setShowDropdown(false);
+    setActiveModal(type);
+  };
+
+  // --- MODALS RENDER ---
+  const renderModal = () => {
+    if (!activeModal) return null;
+    let content, title;
+
+    switch (activeModal) {
+      case 'profile':
+        title = "My Profile";
+        content = (
+          <div className="profile-view">
+            <div className="large-avatar">{user?.email?.charAt(0).toUpperCase()}</div>
+            <h3>{user?.email?.split('@')[0]}</h3>
+            <p className="email-text">{user?.email}</p>
+            <div className="stats-row">
+              <div className="stat-item"><span className="stat-val">{decks.length}</span><span className="stat-label">Decks</span></div>
+              <div className="stat-item"><span className="stat-val">Free</span><span className="stat-label">Plan</span></div>
+            </div>
+          </div>
+        );
+        break;
+      case 'settings':
+        title = "Settings";
+        content = (
+          <div className="settings-view">
+            <div className="setting-item"><span>Email Notifications</span><input type="checkbox" defaultChecked /></div>
+            <div className="setting-item"><span>Dark Mode</span><input type="checkbox" checked={darkMode} onChange={() => setDarkMode(!darkMode)} /></div>
+            <p className="version-text">FlashAI v2.0.0</p>
+          </div>
+        );
+        break;
+      case 'help':
+        title = "Help & Support";
+        content = (
+          <div className="help-view">
+            <p>Need assistance? Contact our team.</p>
+            {/* UPDATED: Stacked Contact Boxes for 2 Emails */}
+            <div className="contact-box">
+              <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                <Mail size={18} className="text-blue-600"/>
+                <strong>General:</strong>
+              </div>
+              <a href="mailto:sainihaal.bandlapalli@gmail.com">Sai Nihaal Reddy</a>
+            </div>
+            <div className="contact-box">
+              <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                <Mail size={18} className="text-blue-600"/>
+                <strong>Technical:</strong>
+              </div>
+              <a href="mailto:mengan.revanth22@gmail.com">Revanth Mengan</a>
+            </div>
+            <div className="contact-box">
+              <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                <BookOpen size={18} className="text-blue-600"/>
+                <strong>Docs:</strong>
+              </div>
+              <a href="#">Read Guide</a>
+            </div>
+          </div>
+        );
+        break;
+      default: return null;
+    }
+
+    return (
+      <div className="modal-overlay" onClick={() => setActiveModal(null)}>
+        <div className="modal-box" onClick={e => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2>{title}</h2>
+            <button className="close-icon" onClick={() => setActiveModal(null)}><X size={20} /></button>
+          </div>
+          <div className="modal-body">{content}</div>
+        </div>
+      </div>
+    );
+  };
+
+  // --- VIEW: CREATE PAGE ---
+  const renderCreate = () => (
+    <div className="page-container fade-in">
+      <div className="page-header">
+        <h2><Sparkles className="icon-pulse" /> Create New Deck</h2>
+        <p>Paste your notes, choose a card count, and let AI do the rest.</p>
+      </div>
+      
+      <div className="create-card-wrapper">
+        <textarea 
+          placeholder="Paste your lecture notes, article, or topic here..." 
+          value={text} 
+          onChange={e => setText(e.target.value)} 
+        />
+        
+        <div className="controls-row">
+          <div className="slider-container">
+            <div className="slider-label">
+              <Layers size={16} /> <span>{numCards} Cards</span>
+            </div>
+            <input 
+              type="range" min="1" max="25" 
+              value={numCards} onChange={(e) => setNumCards(parseInt(e.target.value))} 
+            />
+          </div>
+          
+          <button className="generate-btn" onClick={generateDeck} disabled={loading || !text}>
+            {loading ? <RotateCw className="animate-spin" /> : <Zap size={20} fill="currentColor" />}
+            {loading ? "Generaing..." : "Generate Deck"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // --- VIEW: LIBRARY PAGE ---
+  const renderLibrary = () => (
+    <div className="page-container fade-in">
+      <div className="page-header left-align">
+        <h2>Your Library</h2>
+        <p>{decks.length} Decks Created</p>
+      </div>
+
+      {decks.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-icon"><Library size={48} /></div>
+          <h3>No decks yet</h3>
+          <p>Go to the "Create" tab to generate your first flashcard deck!</p>
+          <button className="primary-btn" onClick={() => setView('create')}>Create Deck</button>
+        </div>
+      ) : (
+        <div className="deck-grid">
+          {decks.map(deck => (
+            <div key={deck._id} className="deck-card" onClick={() => openDeck(deck)}>
+              <div className="delete-btn" onClick={(e) => handleDelete(e, deck._id)}><Trash2 size={18}/></div>
+              <div className="deck-icon"><Brain size={28}/></div>
+              <h3 className="deck-title">{deck.topic}</h3>
+              <p className="deck-count">{deck.cards.length} Cards</p>
+              <div className="deck-arrow"><ArrowLeft size={16} className="rotate-180"/></div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  // --- VIEW: STUDY PAGE ---
+  const renderStudy = () => (
+    <div className="page-container fade-in">
+      <div className="study-nav">
+         <button className="back-btn" onClick={() => { setSelectedDeck(null); setView('library'); }}>
+           <ArrowLeft size={18} /> Back to Library
+         </button>
+         <h2 className="study-title">{selectedDeck.topic}</h2>
+         <div style={{width: '100px'}}></div>
+      </div>
+      
+      {/* FLASHCARD CONTAINER WITH ANIMATION KEY & CLASS */}
+      <div className={`single-card-wrapper ${slideDirection}`} key={currentCardIndex}>
+          <ReactCardFlip isFlipped={!!flipped[currentCardIndex]} flipDirection="horizontal">
+            <div className="flashcard front" onClick={() => handleFlip(currentCardIndex)}>
+              <div className="card-content">
+                <span className="card-label">Question</span>
+                <p>{selectedDeck.cards[currentCardIndex].question}</p>
+              </div>
+              <span className="tap-hint"><RotateCw size={14}/> Tap to flip</span>
+            </div>
+            <div className="flashcard back" onClick={() => handleFlip(currentCardIndex)}>
+              <div className="card-content">
+                <span className="card-label">Answer</span>
+                <p>{selectedDeck.cards[currentCardIndex].answer}</p>
+              </div>
+            </div>
+          </ReactCardFlip>
+      </div>
+
+      <div className="study-controls">
+        <button className="nav-btn" onClick={handlePrev} disabled={currentCardIndex === 0}>
+           <ChevronLeft size={24}/>
+        </button>
+        <span className="page-indicator">{currentCardIndex + 1} / {selectedDeck.cards.length}</span>
+        <button className="nav-btn" onClick={handleNext} disabled={currentCardIndex === selectedDeck.cards.length - 1}>
+           <ChevronRight size={24}/>
+        </button>
+      </div>
+    </div>
+  );
 
   // --- AUTH SCREEN ---
   if (!token) {
     return (
-      <div className="container">
-        <div className="header">
-           <h1><Zap style={{display:'inline', verticalAlign:'middle'}} size={40}/> FlashAI</h1>
-           <p>Your AI Study Companion</p>
-        </div>
-        <div className="auth-box">
-          <h2>{isLogin ? "Welcome Back" : "Create Account"}</h2>
-          <input className="auth-input" placeholder="Email" onChange={e => setEmail(e.target.value)} />
-          <input className="auth-input" type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} />
-          <button className="auth-btn" onClick={handleAuth}>{isLogin ? "Login" : "Sign Up"}</button>
-          <p className="switch-text" onClick={() => setIsLogin(!isLogin)}>
-            {isLogin ? "New here? Create account" : "Have an account? Login"}
-          </p>
+      <div className="auth-container">
+        <div className="auth-content">
+          <div className="auth-header">
+             <div className="big-logo"><Zap size={48} fill="currentColor"/></div>
+             <h1>FlashAI</h1>
+             <p>Your AI Study Companion</p>
+          </div>
+          <div className="auth-form-box">
+            <h2>{isLogin ? "Welcome Back" : "Get Started"}</h2>
+            <div className="input-group">
+              <input placeholder="Username" onChange={e => setEmail(e.target.value)} />
+            </div>
+            <div className="input-group">
+              <input type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} />
+            </div>
+            <button className="auth-submit-btn" onClick={handleAuth}>{isLogin ? "Login" : "Create Account"}</button>
+            <p className="switch-text" onClick={() => setIsLogin(!isLogin)}>
+              {isLogin ? "New to FlashAI? Sign Up" : "Already have an account? Login"}
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
-  // --- DASHBOARD SCREEN ---
+  // --- MAIN APP LAYOUT ---
   return (
-    <div className="container">
-      <div className="top-bar">
-         <div className="header" style={{margin:0, textAlign:'left'}}>
-            <h1>FlashAI</h1>
-         </div>
-         <button className="logout-btn" onClick={handleLogout}><LogOut size={16}/> Logout</button>
-      </div>
+    <div className="app-layout">
+      {renderModal()}
 
-      {!selectedDeck ? (
-        <>
-          <div className="input-section">
-            <h2 style={{marginTop:0, display:'flex', alignItems:'center', gap:'10px'}}>
-              <Brain className="text-blue-600"/> Generate New Deck
-            </h2>
-            <textarea placeholder="Paste your lecture notes, article, or topic here..." value={text} onChange={e => setText(e.target.value)} />
-            
-            <div className="card-count-control">
-              <Layers size={20} />
-              <span>Generate {numCards} Cards</span>
-              <input 
-                type="range" 
-                min="1" 
-                max="25" 
-                value={numCards} 
-                onChange={(e) => setNumCards(parseInt(e.target.value))} 
-              />
-            </div>
+      {/* SIDEBAR NAVIGATION */}
+      <aside className="sidebar">
+        <div className="sidebar-top">
+          <Logo />
+        </div>
+        
+        <nav className="nav-links">
+          <button 
+            className={`nav-item ${view === 'library' || view === 'study' ? 'active' : ''}`} 
+            onClick={() => setView('library')}
+          >
+            <LayoutGrid size={20} /> Library
+          </button>
+          <button 
+            className={`nav-item ${view === 'create' ? 'active' : ''}`} 
+            onClick={() => setView('create')}
+          >
+            <Plus size={20} /> Create
+          </button>
+        </nav>
 
-            <button className="action-btn" onClick={generateDeck} disabled={loading}>
-              {loading ? <RotateCw className="animate-spin"/> : <Plus size={20}/>}
-              {loading ? "Generating..." : "Create Flashcards"}
-            </button>
-          </div>
-
-          <h3 style={{color:'#64748b'}}>Your Library ({decks.length})</h3>
-          <div className="deck-grid">
-            {decks.map(deck => (
-              <div key={deck._id} className="deck-card" onClick={() => openDeck(deck)}>
-                <div className="delete-btn" onClick={(e) => handleDelete(e, deck._id)}>
-                  <Trash2 size={18}/>
-                </div>
-                <div className="deck-icon"><Zap size={24}/></div>
-                <h3 className="deck-title">{deck.topic}</h3>
-                <p className="deck-count">{deck.cards.length} Cards</p>
-              </div>
-            ))}
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="study-header">
-             <button className="back-btn" onClick={() => setSelectedDeck(null)}>
-               <ArrowLeft size={16} style={{verticalAlign:'middle'}}/> Back to Dashboard
-             </button>
-             <h2 style={{margin:0, fontSize:'1.2rem', maxWidth:'50%', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>{selectedDeck.topic}</h2>
-             <div style={{width:'100px'}}></div>
+        <div className="sidebar-bottom">
+          <div className="user-profile" onClick={() => setShowDropdown(!showDropdown)}>
+             <div className="user-avatar-small">
+               {user?.email?.charAt(0).toUpperCase()}
+             </div>
+             <div className="user-info">
+               <span className="user-name">{user?.email?.split('@')[0]}</span>
+               <span className="user-role">FlashAI v2.0</span>
+             </div>
+             <ChevronDown size={14} className="user-chevron"/>
           </div>
           
-          <div className="single-card-wrapper" key={currentCardIndex}>
-              <ReactCardFlip isFlipped={!!flipped[currentCardIndex]} flipDirection="horizontal">
-                <div className="flashcard front" onClick={() => handleFlip(currentCardIndex)}>
-                  <span className="card-label">Question</span>
-                  <p>{selectedDeck.cards[currentCardIndex].question}</p>
-                  <span className="tap-hint"><RotateCw size={14}/> Tap to flip</span>
-                </div>
-                <div className="flashcard back" onClick={() => handleFlip(currentCardIndex)}>
-                  <span className="card-label">Answer</span>
-                  <p>{selectedDeck.cards[currentCardIndex].answer}</p>
-                </div>
-              </ReactCardFlip>
-          </div>
+          {showDropdown && (
+            <div className="user-dropdown">
+               <div className="dropdown-item" onClick={() => openModal('profile')}><User size={16}/> Profile</div>
+               <div className="dropdown-item" onClick={() => openModal('settings')}><Settings size={16}/> Settings</div>
+               <div className="dropdown-item" onClick={() => openModal('help')}><HelpCircle size={16}/> Help</div>
+               <div className="dropdown-divider"></div>
+               <div className="dropdown-item danger" onClick={handleLogout}><LogOut size={16}/> Logout</div>
+            </div>
+          )}
+        </div>
+      </aside>
 
-          <div className="study-controls">
-            <button className="nav-btn" onClick={handlePrev} disabled={currentCardIndex === 0}>
-               <ChevronLeft size={24}/>
-            </button>
-            <span className="page-indicator">{currentCardIndex + 1} / {selectedDeck.cards.length}</span>
-            <button className="nav-btn" onClick={handleNext} disabled={currentCardIndex === selectedDeck.cards.length - 1}>
-               <ChevronRight size={24}/>
-            </button>
-          </div>
-        </>
-      )}
+      {/* MAIN CONTENT AREA */}
+      <main className="main-content">
+        {view === 'library' && renderLibrary()}
+        {view === 'create' && renderCreate()}
+        {view === 'study' && renderStudy()}
+      </main>
     </div>
   );
 }

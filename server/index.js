@@ -68,8 +68,13 @@ app.post('/api/auth/login', async (req, res) => {
   if (!user) return res.status(400).json({ error: "User not found" });
   const validPass = await bcrypt.compare(password, user.password);
   if (!validPass) return res.status(400).json({ error: "Invalid password" });
+  
   const token = jwt.sign({ _id: user._id }, JWT_SECRET);
-  res.header('Authorization', token).json({ token });
+  // Send back token AND user info
+  res.header('Authorization', token).json({ 
+    token, 
+    user: { id: user._id, email: user.email } 
+  });
 });
 
 // --- APP ROUTES ---
@@ -82,7 +87,7 @@ app.post('/api/generate', authMiddleware, async (req, res) => {
   console.log(`[DEBUG] User requested ${cardCount} cards.`);
 
   try {
-    // 1. Robust Prompt (No Schema Dependency)
+    // 1. Robust Prompt Strategy (Universal JSON)
     const prompt = `
       You are a strict JSON generator.
       Task: Generate exactly ${cardCount} study flashcards based on the text below.
@@ -96,7 +101,7 @@ app.post('/api/generate', authMiddleware, async (req, res) => {
       Text: "${text.substring(0, 15000)}"
     `;
 
-    // 2. Call AI (Without complex config that causes errors)
+    // 2. Call AI
     const result = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt
@@ -109,7 +114,7 @@ app.post('/api/generate', authMiddleware, async (req, res) => {
     // Clean up if AI adds markdown despite instructions
     responseText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
     
-    // Find the array brackets to ensure we only parse the JSON part
+    // Find brackets to isolate JSON
     const firstBracket = responseText.indexOf('[');
     const lastBracket = responseText.lastIndexOf(']');
     
