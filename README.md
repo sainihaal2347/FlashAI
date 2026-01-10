@@ -160,8 +160,6 @@ Contributions are welcome! Please fork the repository and create a pull request.
 
 ---
 
-**Developed by [Your Name]** *Full Stack Developer | AI Enthusiast*
-
-```
+**Developed by [Bandlapalli Sai Nihaal Reddy]** *Full Stack Developer | AI Enthusiast*
 
 ```
