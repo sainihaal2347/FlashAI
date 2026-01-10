@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import ReactCardFlip from 'react-card-flip';
-import { Trash2, Plus, LogOut, Zap, Brain, RotateCw, ArrowLeft, ChevronLeft, ChevronRight, Layers, User, Settings, HelpCircle, ChevronDown, X, Library, LayoutGrid, Sparkles, Mail, BookOpen } from 'lucide-react';
+import { Trash2, Plus, LogOut, Zap, Brain, RotateCw, ArrowLeft, ChevronLeft, ChevronRight, Layers, User, Settings, HelpCircle, ChevronDown, X, Library, LayoutGrid, Sparkles, Mail, BookOpen, ArrowRight, ArrowRightCircle, ArrowBigRightDash, ArrowBigRightIcon } from 'lucide-react';
 import './App.css';
 
 // --- CUSTOM COMPONENTS ---
@@ -215,7 +215,7 @@ function App() {
                 <BookOpen size={18} className="text-blue-600"/>
                 <strong>Docs:</strong>
               </div>
-              <a href="#">Read Guide</a>
+              <a href="https://github.com/sainihaal2347/FlashAI/blob/main/README.md" target="_blank">Read Guide</a>
             </div>
           </div>
         );
@@ -264,7 +264,7 @@ function App() {
           
           <button className="generate-btn" onClick={generateDeck} disabled={loading || !text}>
             {loading ? <RotateCw className="animate-spin" /> : <Zap size={20} fill="currentColor" />}
-            {loading ? "Generaing..." : "Generate Deck"}
+            {loading ? "Generating..." : "Generate Deck"}
           </button>
         </div>
       </div>
@@ -294,7 +294,7 @@ function App() {
               <div className="deck-icon"><Brain size={28}/></div>
               <h3 className="deck-title">{deck.topic}</h3>
               <p className="deck-count">{deck.cards.length} Cards</p>
-              <div className="deck-arrow"><ArrowLeft size={16} className="rotate-180"/></div>
+              <div className="deck-arrow"><ArrowRight size={16} className="rotate-180"/></div>
             </div>
           ))}
         </div>
