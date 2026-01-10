@@ -18,6 +18,7 @@ body { background-color: #f0f4f8; font-family: 'Inter', system-ui, -apple-system
 .logout-btn { display: flex; align-items: center; gap: 8px; background: #fff; color: #ef4444; border: 1px solid #fee2e2; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 500; transition: 0.2s; }
 .logout-btn:hover { background: #fef2f2; }
 
+
 /* Input Section */
 .input-section { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin-bottom: 40px; }
 textarea { width: 100%; height: 120px; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1rem; resize: none; box-sizing: border-box; font-family: inherit; }
@@ -36,13 +37,28 @@ textarea:focus { border-color: #2563eb; outline: none; }
 .delete-btn { position: absolute; top: 20px; right: 20px; color: #cbd5e1; cursor: pointer; padding: 5px; transition: 0.2s; }
 .delete-btn:hover { color: #ef4444; background: #fef2f2; border-radius: 8px; }
 
-/* Study Mode */
+/* Study Mode - Navigation */
 .study-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
 .back-btn { background: white; color: #64748b; border: 1px solid #e2e8f0; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 600; transition: 0.2s; }
 .back-btn:hover { background: #f8fafc; color: #1e293b; }
+
+.study-controls { display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 30px; }
+.nav-btn { background: white; border: 1px solid #e2e8f0; color: #1e293b; padding: 12px; border-radius: 50%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.nav-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: #2563eb; color: #2563eb; }
+.nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.page-indicator { font-weight: 600; color: #64748b; min-width: 60px; text-align: center; }
+
+/* Single Card */
+.single-card-wrapper { max-width: 500px; margin: 0 auto; animation: card-enter 0.4s ease-out; }
 .flashcard { height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; border-radius: 24px; font-size: 1.25rem; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.08); transition: transform 0.1s; position: relative; }
 .flashcard:active { transform: scale(0.98); }
 .front { background: white; border: 2px solid #fff; color: #1e293b; }
 .back { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: white; border: 2px solid transparent; }
 .card-label { position: absolute; top: 30px; left: 30px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; }
 .tap-hint { position: absolute; bottom: 30px; font-size: 0.9rem; opacity: 0.6; display: flex; align-items: center; gap: 6px; }
+
+/* Animations */
+@keyframes card-enter {
+  0% { opacity: 0; transform: translateY(15px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}

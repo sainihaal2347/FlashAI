@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import ReactCardFlip from 'react-card-flip';
-import { Trash2, Plus, LogOut, Zap, Brain, RotateCw, ArrowLeft } from 'lucide-react';
+import { Trash2, Plus, LogOut, Zap, Brain, RotateCw, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import './App.css';
 
 function App() {
@@ -14,6 +14,9 @@ function App() {
   const [selectedDeck, setSelectedDeck] = useState(null);
   const [flipped, setFlipped] = useState({});
   const [loading, setLoading] = useState(false);
+  
+  // NEW STATE: Current card index for study mode
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
   const fetchDecks = useCallback(async () => {
     try {
@@ -65,9 +68,8 @@ function App() {
   };
 
   const handleDelete = async (e, id) => {
-    e.stopPropagation(); // Prevent opening the deck when clicking delete
+    e.stopPropagation();
     if(!window.confirm("Delete this deck?")) return;
-    
     try {
       await axios.delete(`http://localhost:5000/api/deck/${id}`, {
         headers: { Authorization: token }
@@ -80,6 +82,25 @@ function App() {
     setFlipped(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
+  // NAVIGATION HANDLERS
+  const handleNext = () => {
+    if (currentCardIndex < selectedDeck.cards.length - 1) {
+      setCurrentCardIndex(prev => prev + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentCardIndex > 0) {
+      setCurrentCardIndex(prev => prev - 1);
+    }
+  };
+
+  const openDeck = (deck) => {
+    setSelectedDeck(deck);
+    setCurrentCardIndex(0); // Always start from card 1
+    setFlipped({}); // Reset flips
+  };
+
   // --- AUTH SCREEN ---
   if (!token) {
     return (
@@ -90,7 +111,7 @@ function App() {
         </div>
         <div className="auth-box">
           <h2>{isLogin ? "Welcome Back" : "Create Account"}</h2>
-          <input className="auth-input" placeholder="Email" onChange={e => setEmail(e.target.value)} />
+          <input className="auth-input" placeholder="Username" onChange={e => setEmail(e.target.value)} />
           <input className="auth-input" type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} />
           <button className="auth-btn" onClick={handleAuth}>{isLogin ? "Login" : "Sign Up"}</button>
           <p className="switch-text" onClick={() => setIsLogin(!isLogin)}>
@@ -127,7 +148,7 @@ function App() {
           <h3 style={{color:'#64748b'}}>Your Library ({decks.length})</h3>
           <div className="deck-grid">
             {decks.map(deck => (
-              <div key={deck._id} className="deck-card" onClick={() => setSelectedDeck(deck)}>
+              <div key={deck._id} className="deck-card" onClick={() => openDeck(deck)}>
                 <div className="delete-btn" onClick={(e) => handleDelete(e, deck._id)}>
                   <Trash2 size={18}/>
                 </div>
@@ -140,30 +161,42 @@ function App() {
         </>
       ) : (
         <>
+          {/* STUDY MODE HEADER */}
           <div className="study-header">
              <button className="back-btn" onClick={() => setSelectedDeck(null)}>
                <ArrowLeft size={16} style={{verticalAlign:'middle'}}/> Back to Dashboard
              </button>
-             <h2 style={{margin:0}}>{selectedDeck.topic}</h2>
-             <div style={{width:'100px'}}></div> {/* Spacer */}
+             <h2 style={{margin:0, fontSize:'1.2rem', maxWidth:'50%', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>{selectedDeck.topic}</h2>
+             <div style={{width:'100px'}}></div>
           </div>
           
-          <div className="deck-grid">
-            {selectedDeck.cards.map((card, idx) => (
-              <ReactCardFlip key={idx} isFlipped={flipped[idx]} flipDirection="horizontal">
+          {/* SINGLE CARD CONTAINER */}
+          {/* Key added here triggers animation on index change */}
+          <div className="single-card-wrapper" key={currentCardIndex}>
+              <ReactCardFlip isFlipped={!!flipped[currentCardIndex]} flipDirection="horizontal">
                 {/* Front */}
-                <div className="flashcard front" onClick={() => handleFlip(idx)}>
+                <div className="flashcard front" onClick={() => handleFlip(currentCardIndex)}>
                   <span className="card-label">Question</span>
-                  <p>{card.question}</p>
+                  <p>{selectedDeck.cards[currentCardIndex].question}</p>
                   <span className="tap-hint"><RotateCw size={14}/> Tap to flip</span>
                 </div>
                 {/* Back */}
-                <div className="flashcard back" onClick={() => handleFlip(idx)}>
+                <div className="flashcard back" onClick={() => handleFlip(currentCardIndex)}>
                   <span className="card-label">Answer</span>
-                  <p>{card.answer}</p>
+                  <p>{selectedDeck.cards[currentCardIndex].answer}</p>
                 </div>
               </ReactCardFlip>
-            ))}
+          </div>
+
+          {/* NAVIGATION CONTROLS */}
+          <div className="study-controls">
+            <button className="nav-btn" onClick={handlePrev} disabled={currentCardIndex === 0}>
+               <ChevronLeft size={24}/>
+            </button>
+            <span className="page-indicator">{currentCardIndex + 1} / {selectedDeck.cards.length}</span>
+            <button className="nav-btn" onClick={handleNext} disabled={currentCardIndex === selectedDeck.cards.length - 1}>
+               <ChevronRight size={24}/>
+            </button>
           </div>
         </>
       )}
