@@ -20,15 +20,12 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error("❌ DB Error:", err));
 
 // --- DATA MODELS ---
-
-// User Model
 const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true }
 });
 const User = mongoose.model('User', UserSchema);
 
-// Flashcard Set Model (Linked to User)
 const FlashcardSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   topic: String,
@@ -37,14 +34,13 @@ const FlashcardSchema = new mongoose.Schema({
 });
 const FlashcardSet = mongoose.model('FlashcardSet', FlashcardSchema);
 
-// --- MIDDLEWARE (Security Guard) ---
+// --- MIDDLEWARE ---
 const authMiddleware = (req, res, next) => {
   const token = req.header('Authorization');
   if (!token) return res.status(401).json({ error: "Access Denied" });
-
   try {
     const verified = jwt.verify(token, JWT_SECRET);
-    req.user = verified; // Attaches user ID to the request
+    req.user = verified;
     next();
   } catch (err) {
     res.status(400).json({ error: "Invalid Token" });
@@ -52,65 +48,82 @@ const authMiddleware = (req, res, next) => {
 };
 
 // --- AUTH ROUTES ---
-
-// Register
 app.post('/api/auth/register', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: "Email and password required" });
-  
   try {
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    
     const newUser = await User.create({ email, password: hashedPassword });
     res.json(newUser);
   } catch (err) {
-    if (err.code === 11000) {
-        res.status(400).json({ error: "Email already exists" });
-    } else {
-        res.status(400).json({ error: "Registration failed" });
-    }
+    if (err.code === 11000) res.status(400).json({ error: "Email already exists" });
+    else res.status(400).json({ error: "Registration failed" });
   }
 });
 
-// Login
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
   if (!user) return res.status(400).json({ error: "User not found" });
-
   const validPass = await bcrypt.compare(password, user.password);
   if (!validPass) return res.status(400).json({ error: "Invalid password" });
-
-  // Create Token
   const token = jwt.sign({ _id: user._id }, JWT_SECRET);
   res.header('Authorization', token).json({ token });
 });
 
-// --- APP ROUTES (Protected) ---
-
-// Initialize New AI Client
+// --- APP ROUTES ---
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// Generate Deck (Needs Token)
 app.post('/api/generate', authMiddleware, async (req, res) => {
-  const { text } = req.body;
+  const { text, count } = req.body;
+  const cardCount = parseInt(count) || 10;
+  
+  console.log(`[DEBUG] User requested ${cardCount} cards.`);
+
   try {
-    // UPDATED PROMPT: Request 10 cards
-    const prompt = `Create 10 study flashcards (question and answer) based on: "${text}". Return ONLY raw JSON array. Format: [{"question": "...", "answer": "..."}]`;
-    
-    // NEW SDK USAGE
+    // 1. Robust Prompt (No Schema Dependency)
+    const prompt = `
+      You are a strict JSON generator.
+      Task: Generate exactly ${cardCount} study flashcards based on the text below.
+      
+      CRITICAL INSTRUCTIONS:
+      1. Output MUST be a raw JSON array.
+      2. Do NOT use Markdown code blocks (no \`\`\`json).
+      3. Use exactly this format: [{"question": "...", "answer": "..."}]
+      4. Do not include any introductory or concluding text. Just the array.
+
+      Text: "${text.substring(0, 15000)}"
+    `;
+
+    // 2. Call AI (Without complex config that causes errors)
     const result = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt
     });
 
-    const aiResponseText = result.text;
-    const jsonString = aiResponseText.replace(/```json|```/g, '').trim();
-    const cards = JSON.parse(jsonString);
+    // 3. Robust Parsing
+    let responseText = result.text;
+    if (!responseText) throw new Error("No response from AI");
 
-    // Save with User ID
+    // Clean up if AI adds markdown despite instructions
+    responseText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    // Find the array brackets to ensure we only parse the JSON part
+    const firstBracket = responseText.indexOf('[');
+    const lastBracket = responseText.lastIndexOf(']');
+    
+    if (firstBracket !== -1 && lastBracket !== -1) {
+        responseText = responseText.substring(firstBracket, lastBracket + 1);
+    }
+
+    let cards = JSON.parse(responseText);
+    
+    // 4. Force Count Limit
+    if (cards.length > cardCount) cards = cards.slice(0, cardCount);
+    
+    console.log(`[DEBUG] Successfully generated ${cards.length} cards.`);
+
     const newSet = await FlashcardSet.create({
       userId: req.user._id,
       topic: text.substring(0, 30) + "...",
@@ -119,18 +132,16 @@ app.post('/api/generate', authMiddleware, async (req, res) => {
 
     res.json(newSet);
   } catch (error) {
-    console.error("Final Generation Error:", error);
-    res.status(500).json({ error: "Generation Failed. Try again later." });
+    console.error("Generation Error:", error);
+    res.status(500).json({ error: "AI Error: " + error.message });
   }
 });
 
-// Get User's Decks (Needs Token)
 app.get('/api/dashboard', authMiddleware, async (req, res) => {
   const sets = await FlashcardSet.find({ userId: req.user._id }).sort({ createdAt: -1 });
   res.json(sets);
 });
 
-// DELETE Deck (New Route)
 app.delete('/api/deck/:id', authMiddleware, async (req, res) => {
   try {
     await FlashcardSet.findOneAndDelete({ _id: req.params.id, userId: req.user._id });

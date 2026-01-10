@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import ReactCardFlip from 'react-card-flip';
-import { Trash2, Plus, LogOut, Zap, Brain, RotateCw, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, Plus, LogOut, Zap, Brain, RotateCw, ArrowLeft, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
 import './App.css';
 
 function App() {
@@ -9,13 +9,14 @@ function App() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
   const [text, setText] = useState('');
+  const [numCards, setNumCards] = useState(10); 
   const [decks, setDecks] = useState([]);
   const [selectedDeck, setSelectedDeck] = useState(null);
   const [flipped, setFlipped] = useState({});
   const [loading, setLoading] = useState(false);
   
-  // NEW STATE: Current card index for study mode
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
   const fetchDecks = useCallback(async () => {
@@ -58,12 +59,21 @@ function App() {
     if (!text) return;
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/generate', { text }, {
+      // DEBUG: Log what we are sending
+      console.log("Sending to server:", { text: text.substring(0, 20) + "...", count: numCards });
+      
+      await axios.post('http://localhost:5000/api/generate', { 
+        text, 
+        count: numCards // IMPORTANT: This must match the backend variable
+      }, {
         headers: { Authorization: token }
       });
       setText('');
       await fetchDecks();
-    } catch (err) { alert("Failed to generate"); }
+    } catch (err) { 
+      console.error(err);
+      alert("Failed to generate"); 
+    }
     setLoading(false);
   };
 
@@ -82,7 +92,6 @@ function App() {
     setFlipped(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
-  // NAVIGATION HANDLERS
   const handleNext = () => {
     if (currentCardIndex < selectedDeck.cards.length - 1) {
       setCurrentCardIndex(prev => prev + 1);
@@ -97,8 +106,8 @@ function App() {
 
   const openDeck = (deck) => {
     setSelectedDeck(deck);
-    setCurrentCardIndex(0); // Always start from card 1
-    setFlipped({}); // Reset flips
+    setCurrentCardIndex(0);
+    setFlipped({}); 
   };
 
   // --- AUTH SCREEN ---
@@ -111,7 +120,7 @@ function App() {
         </div>
         <div className="auth-box">
           <h2>{isLogin ? "Welcome Back" : "Create Account"}</h2>
-          <input className="auth-input" placeholder="Username" onChange={e => setEmail(e.target.value)} />
+          <input className="auth-input" placeholder="Email" onChange={e => setEmail(e.target.value)} />
           <input className="auth-input" type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} />
           <button className="auth-btn" onClick={handleAuth}>{isLogin ? "Login" : "Sign Up"}</button>
           <p className="switch-text" onClick={() => setIsLogin(!isLogin)}>
@@ -139,6 +148,19 @@ function App() {
               <Brain className="text-blue-600"/> Generate New Deck
             </h2>
             <textarea placeholder="Paste your lecture notes, article, or topic here..." value={text} onChange={e => setText(e.target.value)} />
+            
+            <div className="card-count-control">
+              <Layers size={20} />
+              <span>Generate {numCards} Cards</span>
+              <input 
+                type="range" 
+                min="1" 
+                max="25" 
+                value={numCards} 
+                onChange={(e) => setNumCards(parseInt(e.target.value))} 
+              />
+            </div>
+
             <button className="action-btn" onClick={generateDeck} disabled={loading}>
               {loading ? <RotateCw className="animate-spin"/> : <Plus size={20}/>}
               {loading ? "Generating..." : "Create Flashcards"}
@@ -161,7 +183,6 @@ function App() {
         </>
       ) : (
         <>
-          {/* STUDY MODE HEADER */}
           <div className="study-header">
              <button className="back-btn" onClick={() => setSelectedDeck(null)}>
                <ArrowLeft size={16} style={{verticalAlign:'middle'}}/> Back to Dashboard
@@ -170,17 +191,13 @@ function App() {
              <div style={{width:'100px'}}></div>
           </div>
           
-          {/* SINGLE CARD CONTAINER */}
-          {/* Key added here triggers animation on index change */}
           <div className="single-card-wrapper" key={currentCardIndex}>
               <ReactCardFlip isFlipped={!!flipped[currentCardIndex]} flipDirection="horizontal">
-                {/* Front */}
                 <div className="flashcard front" onClick={() => handleFlip(currentCardIndex)}>
                   <span className="card-label">Question</span>
                   <p>{selectedDeck.cards[currentCardIndex].question}</p>
                   <span className="tap-hint"><RotateCw size={14}/> Tap to flip</span>
                 </div>
-                {/* Back */}
                 <div className="flashcard back" onClick={() => handleFlip(currentCardIndex)}>
                   <span className="card-label">Answer</span>
                   <p>{selectedDeck.cards[currentCardIndex].answer}</p>
@@ -188,7 +205,6 @@ function App() {
               </ReactCardFlip>
           </div>
 
-          {/* NAVIGATION CONTROLS */}
           <div className="study-controls">
             <button className="nav-btn" onClick={handlePrev} disabled={currentCardIndex === 0}>
                <ChevronLeft size={24}/>

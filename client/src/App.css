@@ -13,11 +13,14 @@ body { background-color: #f0f4f8; font-family: 'Inter', system-ui, -apple-system
 .auth-btn { width: 100%; background: #2563eb; color: white; padding: 15px; border: none; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 15px; transition: 0.2s; }
 .auth-btn:hover { background: #1d4ed8; transform: translateY(-1px); }
 
+/* NEW: Fixes the cursor issue */
+.switch-text { margin-top: 20px; color: #64748b; font-size: 0.95rem; cursor: pointer; transition: 0.2s; }
+.switch-text:hover { color: #2563eb; text-decoration: underline; }
+
 /* Dashboard Actions */
 .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .logout-btn { display: flex; align-items: center; gap: 8px; background: #fff; color: #ef4444; border: 1px solid #fee2e2; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 500; transition: 0.2s; }
 .logout-btn:hover { background: #fef2f2; }
-
 
 /* Input Section */
 .input-section { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin-bottom: 40px; }
@@ -26,6 +29,13 @@ textarea:focus { border-color: #2563eb; outline: none; }
 .action-btn { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: white; border: none; padding: 12px 25px; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 15px; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
 .action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 .action-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+/* Card Count Slider */
+.card-count-control { display: flex; align-items: center; gap: 15px; margin-top: 20px; color: #64748b; font-weight: 500; background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; }
+.card-count-control input[type="range"] { flex-grow: 1; height: 6px; background: #cbd5e1; border-radius: 5px; appearance: none; cursor: pointer; }
+.card-count-control input[type="range"]::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; background: #2563eb; border-radius: 50%; cursor: pointer; transition: 0.2s; }
+.card-count-control input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.card-count-control input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; background: #2563eb; border-radius: 50%; cursor: pointer; border: none; }
 
 /* Deck Grid */
 .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
