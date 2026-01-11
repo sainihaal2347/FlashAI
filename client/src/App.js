@@ -208,14 +208,14 @@ function App() {
                 <Mail size={18} className="text-blue-600"/>
                 <strong>General:</strong>
               </div>
-              <a href="mailto:support@flashai.com">support@flashai.com</a>
+              <a href="mailto:sainihaal.bandlapalli@gmail.com">Sai Nihaal Reddy</a>
             </div>
             <div className="contact-box">
               <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
                 <Mail size={18} className="text-blue-600"/>
                 <strong>Technical:</strong>
               </div>
-              <a href="mailto:tech@flashai.com">tech@flashai.com</a>
+              <a href="mailto:mengan.revanth22.com">Revanth Mengan.com</a>
             </div>
             <div className="contact-box">
               <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
@@ -271,7 +271,7 @@ function App() {
           
           <button className="generate-btn" onClick={generateDeck} disabled={loading || !text}>
             {loading ? <RotateCw className="animate-spin" /> : <Zap size={20} fill="currentColor" />}
-            {loading ? "Generaing..." : "Generate Deck"}
+            {loading ? "Generating..." : "Generate Deck"}
           </button>
         </div>
       </div>
@@ -364,7 +364,7 @@ function App() {
           <div className="auth-form-box">
             <h2>{isLogin ? "Welcome Back" : "Get Started"}</h2>
             <div className="input-group">
-              <input placeholder="Email" onChange={e => setEmail(e.target.value)} />
+              <input placeholder="Username" onChange={e => setEmail(e.target.value)} />
             </div>
             <div className="input-group">
               <input type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} />
