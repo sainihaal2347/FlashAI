@@ -412,7 +412,7 @@ function App() {
              </div>
              <div className="user-info">
                <span className="user-name">{user?.email?.split('@')[0]}</span>
-               <span className="user-role">Free Plan</span>
+               <span className="user-role">V2.0</span>
              </div>
              <ChevronDown size={14} className="user-chevron"/>
           </div>
