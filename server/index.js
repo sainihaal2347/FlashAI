@@ -91,14 +91,13 @@ app.post('/api/generate', authMiddleware, async (req, res) => {
     // 1. Robust Prompt Strategy (Universal JSON)
     const prompt = `
       You are a strict JSON generator.
-      Task: Generate exactly ${cardCount} study flashcards based on the text below.
+      Task: Generate exactly ${cardCount} study flashcards that help for learning,understanding and revising based on the text below.
       
       CRITICAL INSTRUCTIONS:
       1. Output MUST be a raw JSON array.
       2. Do NOT use Markdown code blocks (no \`\`\`json).
       3. Use exactly this format: [{"question": "...", "answer": "..."}]
-      4. If the text is short, create True/False questions or separate facts to reach exactly ${cardCount} items.
-      5. Do not include any introductory or concluding text. Just the array.
+      4. Do not include any introductory or concluding text. Just the array.
 
       Text: "${text.substring(0, 15000)}"
     `;
