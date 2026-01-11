@@ -1,0 +1,16 @@
+{
+  "name": "flashai",
+  "version": "1.0.0",
+  "description": "![FlashAI Demo](https://img.shields.io/badge/Status-Active-success)\r ![MERN Stack](https://img.shields.io/badge/Stack-MERN-blue)\r ![AI Powered](https://img.shields.io/badge/AI-Gemini%202.5-orange)",
+  "main": "index.js",
+  "scripts": {
+  "start": "cd server && node index.js",
+  "build": "npm install && cd client && npm install --legacy-peer-deps && npm run build && cd ../server && npm install"
+},
+"engines": {
+  "node": "18.x"
+},
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

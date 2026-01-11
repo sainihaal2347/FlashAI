@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
+const path = require('path');
 const jwt = require('jsonwebtoken');
 // NEW SDK IMPORT
 const { GoogleGenAI } = require("@google/genai");
@@ -155,5 +156,17 @@ app.delete('/api/deck/:id', authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Delete failed" });
   }
 });
+
+// Serve static files from the React app
+// This assumes you will build the react app into client/build
+app.use(express.static(path.join(__dirname, '../client/build')));
+
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/build/index.html'));
+});
+
+// app.listen(...) is below this
 
 app.listen(5000, () => console.log("🚀 Server running on port 5000"));
