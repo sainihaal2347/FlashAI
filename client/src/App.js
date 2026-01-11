@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import ReactCardFlip from 'react-card-flip';
-import { Trash2, Plus, LogOut, Zap, Brain, RotateCw, ArrowLeft, ChevronLeft, ChevronRight, Layers, User, Settings, HelpCircle, ChevronDown, X, Library, LayoutGrid, Sparkles, Mail, BookOpen, ArrowRight, ArrowRightCircle, ArrowBigRightDash, ArrowBigRightIcon } from 'lucide-react';
+import { Trash2, Plus, LogOut, Zap, Brain, RotateCw, ArrowLeft, ChevronLeft, ChevronRight, Layers, User, Settings, HelpCircle, ChevronDown, X, Library, LayoutGrid, Sparkles, Mail, BookOpen } from 'lucide-react';
 import './App.css';
 
 // --- CUSTOM COMPONENTS ---
@@ -40,6 +40,13 @@ function App() {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState('next'); // State for animation direction
 
+  // --- DYNAMIC API URL CONFIGURATION ---
+  // If we are in production (deployed), use the relative path '/api'.
+  // If we are local, use 'http://localhost:5000/api'.
+  const API_URL = process.env.NODE_ENV === 'production' 
+    ? '/api' 
+    : 'http://localhost:5000/api';
+
   // Apply Dark Mode Class
   useEffect(() => {
     if (darkMode) {
@@ -52,21 +59,21 @@ function App() {
 
   const fetchDecks = useCallback(async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/dashboard', {
+      const res = await axios.get(`${API_URL}/dashboard`, {
         headers: { Authorization: token }
       });
       setDecks(res.data);
     } catch (err) { console.error(err); }
-  }, [token]);
+  }, [token, API_URL]);
 
   useEffect(() => {
     if (token) fetchDecks();
   }, [token, fetchDecks]);
 
   const handleAuth = async () => {
-    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+    const endpoint = isLogin ? '/auth/login' : '/auth/register';
     try {
-      const res = await axios.post(`http://localhost:5000${endpoint}`, { email, password });
+      const res = await axios.post(`${API_URL}${endpoint}`, { email, password });
       if (isLogin) {
         localStorage.setItem('token', res.data.token);
         localStorage.setItem('user', JSON.stringify(res.data.user)); 
@@ -98,7 +105,7 @@ function App() {
     if (!text) return;
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/generate', { 
+      await axios.post(`${API_URL}/generate`, { 
         text, 
         count: numCards 
       }, {
@@ -118,7 +125,7 @@ function App() {
     e.stopPropagation();
     if(!window.confirm("Delete this deck?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/deck/${id}`, {
+      await axios.delete(`${API_URL}/deck/${id}`, {
         headers: { Authorization: token }
       });
       fetchDecks();
@@ -201,21 +208,21 @@ function App() {
                 <Mail size={18} className="text-blue-600"/>
                 <strong>General:</strong>
               </div>
-              <a href="mailto:sainihaal.bandlapalli@gmail.com">Sai Nihaal Reddy</a>
+              <a href="mailto:support@flashai.com">support@flashai.com</a>
             </div>
             <div className="contact-box">
               <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
                 <Mail size={18} className="text-blue-600"/>
                 <strong>Technical:</strong>
               </div>
-              <a href="mailto:mengan.revanth22@gmail.com">Revanth Mengan</a>
+              <a href="mailto:tech@flashai.com">tech@flashai.com</a>
             </div>
             <div className="contact-box">
               <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
                 <BookOpen size={18} className="text-blue-600"/>
                 <strong>Docs:</strong>
               </div>
-              <a href="https://github.com/sainihaal2347/FlashAI/blob/main/README.md" target="_blank">Read Guide</a>
+              <a href="#">Read Guide</a>
             </div>
           </div>
         );
@@ -264,7 +271,7 @@ function App() {
           
           <button className="generate-btn" onClick={generateDeck} disabled={loading || !text}>
             {loading ? <RotateCw className="animate-spin" /> : <Zap size={20} fill="currentColor" />}
-            {loading ? "Generating..." : "Generate Deck"}
+            {loading ? "Generaing..." : "Generate Deck"}
           </button>
         </div>
       </div>
@@ -294,7 +301,7 @@ function App() {
               <div className="deck-icon"><Brain size={28}/></div>
               <h3 className="deck-title">{deck.topic}</h3>
               <p className="deck-count">{deck.cards.length} Cards</p>
-              <div className="deck-arrow"><ArrowRight size={16} className="rotate-180"/></div>
+              <div className="deck-arrow"><ArrowLeft size={16} className="rotate-180"/></div>
             </div>
           ))}
         </div>
@@ -357,7 +364,7 @@ function App() {
           <div className="auth-form-box">
             <h2>{isLogin ? "Welcome Back" : "Get Started"}</h2>
             <div className="input-group">
-              <input placeholder="Username" onChange={e => setEmail(e.target.value)} />
+              <input placeholder="Email" onChange={e => setEmail(e.target.value)} />
             </div>
             <div className="input-group">
               <input type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} />
@@ -405,7 +412,7 @@ function App() {
              </div>
              <div className="user-info">
                <span className="user-name">{user?.email?.split('@')[0]}</span>
-               <span className="user-role">FlashAI v2.0</span>
+               <span className="user-role">Free Plan</span>
              </div>
              <ChevronDown size={14} className="user-chevron"/>
           </div>

@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const path = require('path'); // FIXED: Added missing import
+const path = require('path');
 // NEW SDK IMPORT
 const { GoogleGenAI } = require("@google/genai");
 
@@ -167,4 +167,6 @@ app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, '../client/build/index.html'));
 });
 
-app.listen(5000, () => console.log("🚀 Server running on port 5000"));
+// FIXED: Use dynamic PORT for Render deployment and bind to 0.0.0.0
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server running on port ${PORT}`));
