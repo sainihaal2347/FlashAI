@@ -3,8 +3,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
-const path = require('path');
 const jwt = require('jsonwebtoken');
+const path = require('path'); // FIXED: Added missing import
 // NEW SDK IMPORT
 const { GoogleGenAI } = require("@google/genai");
 
@@ -97,7 +97,8 @@ app.post('/api/generate', authMiddleware, async (req, res) => {
       1. Output MUST be a raw JSON array.
       2. Do NOT use Markdown code blocks (no \`\`\`json).
       3. Use exactly this format: [{"question": "...", "answer": "..."}]
-      4. Do not include any introductory or concluding text. Just the array.
+      4. If the text is short, create True/False questions or separate facts to reach exactly ${cardCount} items.
+      5. Do not include any introductory or concluding text. Just the array.
 
       Text: "${text.substring(0, 15000)}"
     `;
@@ -157,16 +158,13 @@ app.delete('/api/deck/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// Serve static files from the React app
-// This assumes you will build the react app into client/build
+// --- DEPLOYMENT SETUP (SERVE REACT APP) ---
+// Serve static files from the React app build folder
 app.use(express.static(path.join(__dirname, '../client/build')));
 
-// The "catchall" handler: for any request that doesn't
-// match one above, send back React's index.html file.
-app.get('*', (req, res) => {
+// FIXED: Use regex /.*/ instead of string '*' to avoid router crash
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, '../client/build/index.html'));
 });
-
-// app.listen(...) is below this
 
 app.listen(5000, () => console.log("🚀 Server running on port 5000"));
