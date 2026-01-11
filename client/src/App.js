@@ -222,7 +222,7 @@ function App() {
                 <BookOpen size={18} className="text-blue-600"/>
                 <strong>Docs:</strong>
               </div>
-              <a href="#">Read Guide</a>
+              <a href="https://github.com/sainihaal2347/FlashAI/blob/main/README.md">Read Guide</a>
             </div>
           </div>
         );
