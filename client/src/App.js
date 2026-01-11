@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import ReactCardFlip from 'react-card-flip';
-import { Trash2, Plus, LogOut, Zap, Brain, RotateCw, ArrowLeft, ChevronLeft, ChevronRight, Layers, User, Settings, HelpCircle, ChevronDown, X, Library, LayoutGrid, Sparkles, Mail, BookOpen } from 'lucide-react';
+import { Trash2, Plus, LogOut, Zap, Brain, RotateCw, ArrowLeft, ChevronLeft, ChevronRight, Layers, User, Settings, HelpCircle, ChevronDown, X, Library, LayoutGrid, Sparkles, Mail, BookOpen, ArrowRight } from 'lucide-react';
 import './App.css';
 
 // --- CUSTOM COMPONENTS ---
@@ -215,7 +215,7 @@ function App() {
                 <Mail size={18} className="text-blue-600"/>
                 <strong>Technical:</strong>
               </div>
-              <a href="mailto:mengan.revanth22.com">Revanth Mengan.com</a>
+              <a href="mailto:mengan.revanth22.com">Revanth Mengan</a>
             </div>
             <div className="contact-box">
               <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
@@ -301,7 +301,7 @@ function App() {
               <div className="deck-icon"><Brain size={28}/></div>
               <h3 className="deck-title">{deck.topic}</h3>
               <p className="deck-count">{deck.cards.length} Cards</p>
-              <div className="deck-arrow"><ArrowLeft size={16} className="rotate-180"/></div>
+              <div className="deck-arrow"><ArrowRight size={16} className="rotate-180"/></div>
             </div>
           ))}
         </div>
