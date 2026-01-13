@@ -41,8 +41,6 @@ function App() {
   const [slideDirection, setSlideDirection] = useState('next'); // State for animation direction
 
   // --- DYNAMIC API URL CONFIGURATION ---
-  // If we are in production (deployed), use the relative path '/api'.
-  // If we are local, use 'http://localhost:5000/api'.
   const API_URL = process.env.NODE_ENV === 'production' 
     ? '/api' 
     : 'http://localhost:5000/api';
@@ -202,27 +200,26 @@ function App() {
         content = (
           <div className="help-view">
             <p>Need assistance? Contact our team.</p>
-            {/* UPDATED: Stacked Contact Boxes for 2 Emails */}
             <div className="contact-box">
               <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
                 <Mail size={18} className="text-blue-600"/>
                 <strong>General:</strong>
               </div>
-              <a href="mailto:sainihaal.bandlapalli@gmail.com">Sai Nihaal Reddy</a>
+              <a href="mailto:support@flashai.com">support@flashai.com</a>
             </div>
             <div className="contact-box">
               <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
                 <Mail size={18} className="text-blue-600"/>
                 <strong>Technical:</strong>
               </div>
-              <a href="mailto:mengan.revanth22.com">Revanth Mengan</a>
+              <a href="mailto:tech@flashai.com">tech@flashai.com</a>
             </div>
             <div className="contact-box">
               <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
                 <BookOpen size={18} className="text-blue-600"/>
                 <strong>Docs:</strong>
               </div>
-              <a href="https://github.com/sainihaal2347/FlashAI/blob/main/README.md">Read Guide</a>
+              <a href="#">Read Guide</a>
             </div>
           </div>
         );
@@ -271,7 +268,7 @@ function App() {
           
           <button className="generate-btn" onClick={generateDeck} disabled={loading || !text}>
             {loading ? <RotateCw className="animate-spin" /> : <Zap size={20} fill="currentColor" />}
-            {loading ? "Generating..." : "Generate Deck"}
+            {loading ? "Generaing..." : "Generate Deck"}
           </button>
         </div>
       </div>
@@ -364,7 +361,7 @@ function App() {
           <div className="auth-form-box">
             <h2>{isLogin ? "Welcome Back" : "Get Started"}</h2>
             <div className="input-group">
-              <input placeholder="Username" onChange={e => setEmail(e.target.value)} />
+              <input placeholder="Email" onChange={e => setEmail(e.target.value)} />
             </div>
             <div className="input-group">
               <input type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} />
@@ -412,7 +409,7 @@ function App() {
              </div>
              <div className="user-info">
                <span className="user-name">{user?.email?.split('@')[0]}</span>
-               <span className="user-role">V2.0</span>
+               <span className="user-role">FlashAI v2.0</span>
              </div>
              <ChevronDown size={14} className="user-chevron"/>
           </div>
@@ -431,6 +428,11 @@ function App() {
 
       {/* MAIN CONTENT AREA */}
       <main className="main-content">
+        {/* MOBILE HEADER - VISIBLE ONLY ON MOBILE */}
+        <div className="mobile-top-bar">
+           <Logo />
+        </div>
+
         {view === 'library' && renderLibrary()}
         {view === 'create' && renderCreate()}
         {view === 'study' && renderStudy()}
