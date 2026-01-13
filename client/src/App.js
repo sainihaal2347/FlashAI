@@ -205,21 +205,21 @@ function App() {
                 <Mail size={18} className="text-blue-600"/>
                 <strong>General:</strong>
               </div>
-              <a href="mailto:support@flashai.com">support@flashai.com</a>
+              <a href="mailto:sainihaal.bandlapalli@gmail.com">Sai Nihaal Reddy</a>
             </div>
             <div className="contact-box">
               <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
                 <Mail size={18} className="text-blue-600"/>
                 <strong>Technical:</strong>
               </div>
-              <a href="mailto:tech@flashai.com">tech@flashai.com</a>
+              <a href="mailto:revanth.mengan22@gmail.com">Revanth Mengan</a>
             </div>
             <div className="contact-box">
               <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
                 <BookOpen size={18} className="text-blue-600"/>
                 <strong>Docs:</strong>
               </div>
-              <a href="#">Read Guide</a>
+              <a href="https://github.com/sainihaal2347/FlashAI/blob/main/README.md">Read Guide</a>
             </div>
           </div>
         );
@@ -361,7 +361,7 @@ function App() {
           <div className="auth-form-box">
             <h2>{isLogin ? "Welcome Back" : "Get Started"}</h2>
             <div className="input-group">
-              <input placeholder="Email" onChange={e => setEmail(e.target.value)} />
+              <input placeholder="Username" onChange={e => setEmail(e.target.value)} />
             </div>
             <div className="input-group">
               <input type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} />
